@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Robux Calculator</title>
+  <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Comfortaa', cursive;
+      background: radial-gradient(circle at top left, #e1f5fe, #ffffff);
+      min-height: 100vh;
+      padding: 20px;
+      color: #333;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    header {
+      background: linear-gradient(90deg, #00796b, #26c6da);
+      color: white;
+      padding: 20px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 20px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-title {
+      font-size: 26px;
+      font-weight: bold;
+      animation: pulse 2s infinite;
+    }
+
+    .container {
+      background: white;
+      border-radius: 28px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+      padding: 40px;
+      max-width: 540px;
+      margin: 60px auto;
+      position: relative;
+      z-index: 1;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #004d40;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 20px;
+      font-weight: 600;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 8px;
+      border-radius: 16px;
+      border: 2px solid #ddd;
+      font-size: 16px;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: #00acc1;
+      box-shadow: 0 0 10px #00acc170;
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 18px;
+      background: #e0f2f1;
+      border-left: 6px solid #00796b;
+      border-radius: 16px;
+      font-size: 18px;
+      animation: slideIn 0.6s ease forwards;
+    }
+
+    .celebration {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .celebration img {
+      width: 120px;
+      animation: rotatePop 1s ease-out;
+    }
+
+    .footer {
+      text-align: center;
+      color: #888;
+      margin-top: 40px;
+    }
+
+    #currencyWrapper {
+      display: none;
+    }
+
+    .popup-info {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #555;
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 12px;
+      border-left: 4px solid #00acc1;
+      animation: slideIn 0.5s ease-out;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    @keyframes rotatePop {
+      0% { transform: scale(0.3) rotate(0deg); opacity: 0; }
+      100% { transform: scale(1) rotate(360deg); opacity: 1; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-title">🎮 Robux Calculator</div>
+  </header>
+
+  <div class="container">
+    <h1>Calculate Your Robux Payout</h1>
+
+    <label for="price">Enter Gamepass Price (Robux):</label>
+    <input type="number" id="price" placeholder="e.g. 100" />
+
+    <label for="option">Choose Calculation Type:</label>
+    <select id="option">
+      <option value="normal">Standard Payout (40% cut)</option>
+      <option value="devex">DevEx Rate (USD)</option>
+      <option value="premium">Premium Bonus (30% cut)</option>
+      <option value="tax">After Group Tax (30% total)</option>
+      <option value="affiliate">Affiliate Bonus (10% extra)</option>
+    </select>
+
+    <div id="popupInfo" class="popup-info"></div>
+
+    <div id="currencyWrapper">
+      <label for="currency">Select Output Currency:</label>
+      <select id="currency">
+        <option value="USD">USD</option>
+        <option value="INR">INR</option>
+        <option value="EUR">EUR</option>
+        <option value="GBP">GBP</option>
+        <option value="JPY">JPY</option>
+        <option value="CAD">CAD</option>
+        <option value="AUD">AUD</option>
+        <option value="CNY">CNY</option>
+        <option value="KRW">KRW</option>
+        <option value="BRL">BRL</option>
+      </select>
+    </div>
+
+    <div class="result" id="resultDisplay"></div>
+    <div class="celebration" id="celebration"></div>
+    <div class="footer">Updated 2025 | All rights reserved.</div>
+  </div>
+
+  <audio id="sfx" src="https://upload.wikimedia.org/wikipedia/commons/0/06/Roblox_Death_Sound.ogg"></audio>
+
+  <script>
+    const exchangeRates = {
+      USD: 1,
+      INR: 83,
+      EUR: 0.92,
+      GBP: 0.79,
+      JPY: 155,
+      CAD: 1.36,
+      AUD: 1.51,
+      CNY: 7.2,
+      KRW: 1370,
+      BRL: 5.2
+    };
+
+    const gifs = {
+      normal: "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif",
+      devex: "https://media.giphy.com/media/l3q2K5jinAlChoCLS/giphy.gif",
+      premium: "https://media.giphy.com/media/3oz8xLzId7TV6hFgPS/giphy.gif",
+      tax: "https://media.giphy.com/media/26ufdipQqU2lhNA4g/giphy.gif",
+      affiliate: "https://media.giphy.com/media/3o7abldj0b3rxrZUxW/giphy.gif"
+    };
+
+    const descriptions = {
+      normal: "Roblox takes 40% of each sale. You get the remaining 60%.",
+      devex: "Convert Robux to real USD via DevEx. 100,000 Robux = $350.",
+      premium: "If a Premium user buys your item, you only lose 30%.",
+      tax: "When sold through a group, you often lose another 30%.",
+      affiliate: "Earn 10% extra when someone buys using your referral link."
+    };
+
+    const priceInput = document.getElementById("price");
+    const optionSelect = document.getElementById("option");
+    const currencyWrapper = document.getElementById("currencyWrapper");
+    const currencySelect = document.getElementById("currency");
+    const resultDisplay = document.getElementById("resultDisplay");
+    const sfx = document.getElementById("sfx");
+    const celebration = document.getElementById("celebration");
+    const popupInfo = document.getElementById("popupInfo");
+
+    priceInput.addEventListener("input", calculateRobux);
+    optionSelect.addEventListener("change", () => {
+      currencyWrapper.style.display = optionSelect.value === "devex" ? "block" : "none";
+      calculateRobux();
+    });
+    currencySelect.addEventListener("change", calculateRobux);
+
+    function calculateRobux() {
+      const price = parseFloat(priceInput.value);
+      const option = optionSelect.value;
+      const currency = currencySelect.value;
+
+      if (isNaN(price) || price <= 0) {
+        resultDisplay.innerHTML = "⚠️ Please enter a valid Robux amount.";
+        celebration.innerHTML = "";
+        popupInfo.innerHTML = "";
+        return;
+      }
+
+      let resultText = "";
+      let value = 0;
+
+      popupInfo.innerHTML = `ℹ️ ${descriptions[option]}`;
+
+      switch (option) {
+        case "normal":
+          value = Math.floor(price * 0.6);
+          resultText = `💰 You receive <strong>${value} Robux</strong> after 40% cut.`;
+          break;
+        case "devex":
+          let usd = price / 350;
+          let converted = (usd * exchangeRates[currency]).toFixed(2);
+          resultText = `💵 DevEx Value: <strong>${converted} ${currency}</strong>`;
+          break;
+        case "premium":
+          value = Math.floor(price * 0.7);
+          resultText = `🎉 With Premium: <strong>${value} Robux</strong> (30% cut)`;
+          break;
+        case "tax":
+          value = Math.floor(price * 0.7);
+          resultText = `🏦 After Group Tax: <strong>${value} Robux</strong>`;
+          break;
+        case "affiliate":
+          value = Math.floor(price * 1.1);
+          resultText = `🔗 Affiliate Bonus: <strong>${value} Robux</strong>`;
+          break;
+      }
+
+      resultDisplay.innerHTML = `✅ ${resultText}`;
+      celebration.innerHTML = `<img src="${gifs[option]}" alt="GIF" />`;
+      sfx.play();
+    }
+  </script>
+</body>
+</html>
